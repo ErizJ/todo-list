@@ -1,94 +1,61 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"smallTodoList/models"
 )
 
-var (
-	fail    = "fail"
-	success = "success"
+const (
+	msgFail    = "fail"
+	msgSuccess = "success"
 )
 
-// InitIndexHtml 初始化index页面
+// InitIndexHtml 初始化 index 页面
 func InitIndexHtml(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", nil)
 }
 
-// CreateTodo 增加一个Todo
+// CreateTodo 新增一个 Todo
 func CreateTodo(c *gin.Context) {
 	var todo models.Todo
-	err := c.ShouldBindJSON(&todo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg":  fail,
-			"data": err.Error(),
-		})
+	if err := c.ShouldBindJSON(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": msgFail, "data": err.Error()})
 		return
 	}
-
-	err = models.CreateTodo(&todo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg":  fail,
-			"data": err.Error(),
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  success,
-			"data": todo,
-		})
+	if err := models.CreateTodo(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": msgFail, "data": err.Error()})
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{"msg": msgSuccess, "data": todo})
 }
 
-// DeleteTodo 删除一个Todo
+// DeleteTodo 删除一个 Todo
 func DeleteTodo(c *gin.Context) {
 	id := c.Param("id")
-
-	err := models.DeleteTodo(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg":  fail,
-			"data": err.Error(),
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  success,
-			"data": fmt.Sprintf("id=%v 删除成功", id),
-		})
+	if err := models.DeleteTodo(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": msgFail, "data": err.Error()})
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{"msg": msgSuccess, "data": nil})
 }
 
-// UpdateTodoStatus 修改Todo状态
+// UpdateTodoStatus 切换 Todo 完成状态
 func UpdateTodoStatus(c *gin.Context) {
 	id := c.Param("id")
-
-	err := models.UpdateTodoStatus(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg":  fail,
-			"data": err.Error(),
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  success,
-			"data": nil,
-		})
+	if err := models.UpdateTodoStatus(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": msgFail, "data": err.Error()})
+		return
 	}
+	c.JSON(http.StatusOK, gin.H{"msg": msgSuccess, "data": nil})
 }
 
-// GetAllTodo 查询所有Todo
+// GetAllTodo 查询所有 Todo
 func GetAllTodo(c *gin.Context) {
 	todos, err := models.GetAllTodo()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg":  fail,
-			"data": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": msgFail, "data": err.Error()})
 		return
-	} else {
-		c.JSON(http.StatusOK, todos)
 	}
+	c.JSON(http.StatusOK, gin.H{"msg": msgSuccess, "data": todos})
 }

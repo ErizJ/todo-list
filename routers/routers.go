@@ -2,32 +2,31 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	"os"
 	"smallTodoList/controller"
 )
 
-// SetupRouter 注册路由
+// SetupRouter 注册路由并启动服务
 func SetupRouter() {
 	r := gin.Default()
 
-	// 加载初始网页index
 	r.Static("/static", "statics")
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", controller.InitIndexHtml)
 
-	v1Group := r.Group("/v1")
+	v1 := r.Group("/v1")
 	{
-		//增
-		v1Group.POST("/todo", controller.CreateTodo)
-		//删
-		v1Group.DELETE("/todo/:id", controller.DeleteTodo)
-		//改
-		v1Group.PUT("/todo/:id", controller.UpdateTodoStatus)
-		//查
-		v1Group.GET("/todo", controller.GetAllTodo)
+		v1.POST("/todo", controller.CreateTodo)
+		v1.DELETE("/todo/:id", controller.DeleteTodo)
+		v1.PUT("/todo/:id", controller.UpdateTodoStatus)
+		v1.GET("/todo", controller.GetAllTodo)
 	}
 
-	err := r.Run(":9090")
-	if err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9090"
+	}
+	if err := r.Run(":" + port); err != nil {
 		panic(err)
 	}
 }

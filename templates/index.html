@@ -1,1 +1,508 @@
-<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=icon href=/favicon.ico><title>bubble清单</title><link href=/static/css/app.224ec165.css rel=preload as=style><link href=/static/css/chunk-vendors.57db8905.css rel=preload as=style><link href=/static/js/app.1b4a2de4.js rel=preload as=script><link href=/static/js/chunk-vendors.ddcb6f91.js rel=preload as=script><link href=/static/css/chunk-vendors.57db8905.css rel=stylesheet><link href=/static/css/app.224ec165.css rel=stylesheet></head><body><noscript><strong>We're sorry but dsb doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id=app></div><script src=/static/js/chunk-vendors.ddcb6f91.js></script><script src=/static/js/app.1b4a2de4.js></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo List</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1d1d1f;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ─────────────────────────────────── */
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    .header {
+      margin-bottom: 36px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #1d1d1f;
+    }
+    .header h1 span {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header .subtitle {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #86868b;
+    }
+
+    /* ── Stats bar ───────────────────────────────── */
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      background: #fff;
+      border: 1px solid #e5e5ea;
+      color: #3c3c43;
+    }
+    .stat-chip .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .stat-chip.all .dot   { background: #6366f1; }
+    .stat-chip.open .dot  { background: #f59e0b; }
+    .stat-chip.done .dot  { background: #22c55e; }
+
+    /* ── Input area ──────────────────────────────── */
+    .input-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e5e5ea;
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .input-card input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #1d1d1f;
+      background: transparent;
+    }
+    .input-card input::placeholder { color: #aeaeb2; }
+
+    .btn-add {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-add:hover:not(:disabled) { opacity: .9; }
+    .btn-add:active:not(:disabled) { transform: scale(.97); }
+    .btn-add:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Filter tabs ─────────────────────────────── */
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .tab {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: #86868b;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .tab.active {
+      background: #fff;
+      color: #6366f1;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .tab:hover:not(.active) { color: #1d1d1f; }
+
+    /* ── Todo list ───────────────────────────────── */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e5e5ea;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      transition: box-shadow .15s, border-color .15s, opacity .2s;
+    }
+    .todo-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,.07); border-color: #d1d1d6; }
+    .todo-item.done { opacity: .65; }
+
+    /* Custom checkbox */
+    .checkbox {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #d1d1d6;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, background .15s;
+    }
+    .checkbox:hover { border-color: #6366f1; }
+    .checkbox.checked {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-color: transparent;
+    }
+    .checkbox.checked svg { display: block; }
+    .checkbox svg { display: none; }
+
+    .todo-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+      transition: color .15s;
+    }
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: #aeaeb2;
+    }
+
+    .btn-delete {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #aeaeb2;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .15s, background .15s, color .15s;
+    }
+    .todo-item:hover .btn-delete { opacity: 1; }
+    .btn-delete:hover { background: #fff1f1; color: #ef4444; }
+
+    /* ── Empty state ─────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 48px 0;
+      color: #aeaeb2;
+    }
+    .empty svg { margin: 0 auto 12px; display: block; opacity: .4; }
+    .empty p { font-size: 15px; }
+
+    /* ── Toast ───────────────────────────────────── */
+    .toast-wrap {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+      animation: toastIn .2s ease;
+    }
+    .toast.success { background: #22c55e; }
+    .toast.error   { background: #ef4444; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Loading spinner ─────────────────────────── */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Clear completed ─────────────────────────── */
+    .footer-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+    .btn-clear {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      color: #aeaeb2;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+    .btn-clear:hover { color: #ef4444; background: #fff1f1; }
+    .btn-clear:disabled { opacity: .4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Toast notifications -->
+  <div class="toast-wrap">
+    <div v-for="t in toasts" :key="t.id" :class="['toast', t.type]">{{ t.msg }}</div>
+  </div>
+
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <h1>My <span>Todo</span> List</h1>
+      <p class="subtitle">
+        保持专注，逐一完成
+        <span v-if="isMock" style="margin-left:8px;padding:2px 8px;border-radius:4px;background:#fef3c7;color:#d97706;font-size:12px;font-weight:600;vertical-align:middle;">MOCK</span>
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-chip all"><span class="dot"></span>全部 {{ todos.length }}</div>
+      <div class="stat-chip open"><span class="dot"></span>待完成 {{ pendingCount }}</div>
+      <div class="stat-chip done"><span class="dot"></span>已完成 {{ doneCount }}</div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-card">
+      <input
+        v-model.trim="newTitle"
+        placeholder="添加新的待办事项..."
+        maxlength="500"
+        @keyup.enter="handleAdd"
+      />
+      <button class="btn-add" :disabled="adding || !newTitle" @click="handleAdd">
+        <span v-if="adding" class="spinner"></span>
+        <span v-else>+ 添加</span>
+      </button>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button :class="['tab', filter==='all'?'active':'']"    @click="filter='all'">全部</button>
+      <button :class="['tab', filter==='open'?'active':'']"   @click="filter='open'">待完成</button>
+      <button :class="['tab', filter==='done'?'active':'']"   @click="filter='done'">已完成</button>
+    </div>
+
+    <!-- List -->
+    <div class="todo-list" v-if="filtered.length">
+      <div
+        v-for="todo in filtered"
+        :key="todo.id"
+        :class="['todo-item', todo.status ? 'done' : '']"
+      >
+        <div
+          :class="['checkbox', todo.status ? 'checked' : '']"
+          @click="handleToggle(todo)"
+        >
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="todo-text">{{ todo.title }}</span>
+        <button class="btn-delete" @click="handleDelete(todo)" title="删除">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty" v-else>
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect x="8" y="14" width="32" height="28" rx="4" stroke="#86868b" stroke-width="2"/>
+        <path d="M16 8h16v6H16z" stroke="#86868b" stroke-width="2"/>
+        <path d="M18 26h12M18 32h8" stroke="#86868b" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <p>{{ filter === 'done' ? '还没有已完成的任务' : '没有待办事项，添加一个吧！' }}</p>
+    </div>
+
+    <!-- Footer bar -->
+    <div class="footer-bar" v-if="doneCount > 0">
+      <button class="btn-clear" :disabled="clearing" @click="clearDone">
+        {{ clearing ? '清除中...' : `清除已完成 (${doneCount})` }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue
+
+// ── Mock API（内存模拟，URL 加 ?mock=1 启用）────────────────────
+const isMockMode = new URLSearchParams(location.search).get('mock') === '1'
+    || new URLSearchParams(location.search).get('mock') === 'true'
+
+let _mockId = 3
+const _mockStore = [
+  { id: 1, title: '阅读《Go 语言圣经》第三章', status: false },
+  { id: 2, title: '完成今日代码 Review', status: true },
+  { id: 3, title: '整理项目文档', status: false },
+]
+
+function delay(ms = 300) { return new Promise(r => setTimeout(r, ms)) }
+
+const mockApi = {
+  async getAll()       { await delay(); return { msg: 'success', data: [..._mockStore] } },
+  async create(title)  { await delay(); const t = { id: ++_mockId, title, status: false }; _mockStore.push(t); return { msg: 'success', data: { ...t } } },
+  async toggle(id)     { await delay(); const t = _mockStore.find(x => x.id === id); if (!t) throw new Error('记录不存在'); t.status = !t.status; return { msg: 'success', data: null } },
+  async remove(id)     { await delay(); const i = _mockStore.findIndex(x => x.id === id); if (i < 0) throw new Error('记录不存在'); _mockStore.splice(i, 1); return { msg: 'success', data: null } },
+}
+
+// ── Real fetch API ────────────────────────────────────────────
+async function realRequest(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } }
+  if (body) opts.body = JSON.stringify(body)
+  const res = await fetch(url, opts)
+  const json = await res.json()
+  if (!res.ok || json.msg === 'fail') throw new Error(json.data || '操作失败')
+  return json
+}
+
+// ── Vue App ───────────────────────────────────────────────────
+createApp({
+  setup() {
+    const todos    = ref([])
+    const newTitle = ref('')
+    const filter   = ref('all')
+    const adding   = ref(false)
+    const clearing = ref(false)
+    const toasts   = ref([])
+
+    const pendingCount = computed(() => todos.value.filter(t => !t.status).length)
+    const doneCount    = computed(() => todos.value.filter(t => t.status).length)
+    const filtered     = computed(() => {
+      if (filter.value === 'open') return todos.value.filter(t => !t.status)
+      if (filter.value === 'done') return todos.value.filter(t => t.status)
+      return todos.value
+    })
+
+    function toast(msg, type = 'success') {
+      const id = Date.now()
+      toasts.value.push({ id, msg, type })
+      setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 2500)
+    }
+
+    async function loadTodos() {
+      try {
+        const json = isMockMode
+          ? await mockApi.getAll()
+          : await realRequest('GET', '/v1/todo')
+        todos.value = json.data || []
+      } catch (e) {
+        toast('加载失败：' + e.message, 'error')
+      }
+    }
+
+    async function handleAdd() {
+      if (!newTitle.value || adding.value) return
+      adding.value = true
+      try {
+        const title = newTitle.value
+        const json = isMockMode
+          ? await mockApi.create(title)
+          : await realRequest('POST', '/v1/todo', { title })
+        todos.value.push(json.data)
+        newTitle.value = ''
+        toast('已添加')
+      } catch (e) {
+        toast('添加失败：' + e.message, 'error')
+      } finally {
+        adding.value = false
+      }
+    }
+
+    async function handleToggle(todo) {
+      try {
+        isMockMode
+          ? await mockApi.toggle(todo.id)
+          : await realRequest('PUT', `/v1/todo/${todo.id}`)
+        todo.status = !todo.status
+      } catch (e) {
+        toast('更新失败：' + e.message, 'error')
+      }
+    }
+
+    async function handleDelete(todo) {
+      try {
+        isMockMode
+          ? await mockApi.remove(todo.id)
+          : await realRequest('DELETE', `/v1/todo/${todo.id}`)
+        todos.value = todos.value.filter(t => t.id !== todo.id)
+        toast('已删除')
+      } catch (e) {
+        toast('删除失败：' + e.message, 'error')
+      }
+    }
+
+    async function clearDone() {
+      if (clearing.value) return
+      clearing.value = true
+      const done = todos.value.filter(t => t.status)
+      try {
+        await Promise.all(done.map(t =>
+          isMockMode ? mockApi.remove(t.id) : realRequest('DELETE', `/v1/todo/${t.id}`)
+        ))
+        todos.value = todos.value.filter(t => !t.status)
+        toast(`已清除 ${done.length} 项`)
+      } catch (e) {
+        toast('清除失败：' + e.message, 'error')
+        await loadTodos()
+      } finally {
+        clearing.value = false
+      }
+    }
+
+    onMounted(loadTodos)
+
+    return {
+      isMock: isMockMode,
+      todos, newTitle, filter, adding, clearing, toasts,
+      pendingCount, doneCount, filtered,
+      handleAdd, handleToggle, handleDelete, clearDone
+    }
+  }
+}).mount('#app')
+</script>
+</body>
+</html>

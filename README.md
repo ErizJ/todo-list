@@ -1,30 +1,67 @@
-# 简单小清单
-Q1mi teacher's tutorial project——smallTodoList
+# Todo List
 
-七米老师-项目视频教程：[【最新Go Web开发教程】基于gin框架和gorm的web开发实战 (七米出品)_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1gJ411p7xC/?spm_id_from=333.999.0.0)
+一个基于 **Go + Gin + GORM** 的轻量待办事项 Web 应用，前端使用 Vue 3 实现。
 
 ## 技术栈
 
-- 框架：Gin
-- ORM：Gorm
-- 数据库：MySQL
+| 层级 | 技术 |
+|------|------|
+| Web 框架 | [Gin](https://github.com/gin-gonic/gin) |
+| ORM | [GORM](https://gorm.io) + MySQL 驱动 |
+| 数据库 | MySQL |
+| 前端 | Vue 3 (CDN)，无需打包 |
 
-## 目录结构
+## 快速启动
 
-```bash
-├─controller  // 控制层
-├─dao		  // 数据访问层
-├─models	  // 模型
-├─routers	  // 路由层
-├─statics	  // 静态文件
-└─templates	  // 网页模板
+### 1. 准备数据库
+
+确保本地 MySQL 已启动，并创建数据库：
+
+```sql
+CREATE DATABASE person_practice CHARACTER SET utf8mb4;
 ```
 
-## 效果图
+### 2. 配置数据库连接（可选）
 
-![image-20231014180354483](https://s2.loli.net/2023/10/14/vpClPiY6RkeaNtQ.png)
+默认连接参数：`root:root@localhost:3306/person_practice`
 
-## 其他
+如需修改，通过环境变量覆盖：
 
-欢迎各位star学习本项目，有任何问题可随时通过Issues等方式向作者提问~!
+```bash
+export DB_USER=your_user
+export DB_PASSWORD=your_password
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_NAME=person_practice
+```
 
+### 3. 启动服务
+
+```bash
+go run main.go
+```
+
+服务默认监听 `http://localhost:9090`，可通过环境变量 `PORT` 修改端口：
+
+```bash
+PORT=8080 go run main.go
+```
+
+## 使用说明
+
+打开浏览器访问 `http://localhost:9090`：
+
+- **添加任务**：在输入框输入内容，按 Enter 或点击「+ 添加」
+- **完成/撤销**：点击任务左侧的圆圈勾选/取消
+- **删除任务**：鼠标悬停在任务上，点击右侧 × 按钮
+- **筛选任务**：切换「全部 / 待完成 / 已完成」标签
+- **批量清除**：点击「清除已完成」一键删除所有已完成项
+
+## API 接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/v1/todo` | 获取所有待办 |
+| POST | `/v1/todo` | 新增待办 `{"title": "..."}` |
+| PUT | `/v1/todo/:id` | 切换完成状态 |
+| DELETE | `/v1/todo/:id` | 删除待办 |
